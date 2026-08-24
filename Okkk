@@ -1,0 +1,65 @@
+-- =========================================================================
+-- 🌪️ SUPER FLING ALL SCRIPT (DELTA OPTIMIZED)
+-- =========================================================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+
+-- Bật tính năng Fling bằng cách tăng tốc độ quay và vận tốc của HumanoidRootPart
+local function startFling()
+	local char = player.Character
+	if not char then return end
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	local hum = char:FindFirstChild("Humanoid")
+	if not hrp or not hum then return end
+
+	-- Lưu lại vị trí cũ để khi tắt có thể quay về (hoặc tránh bị kẹt)
+	local oldPos = hrp.CFrame
+
+	-- Tạo lực quay cực mạnh (AngularVelocity / Fling physics bypass)
+	local function flingLoop()
+		if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+		local rootPart = player.Character.HumanoidRootPart
+		
+		-- Tăng tốc độ quay giả lập bằng CFrame ngẫu nhiên liên tục ở tốc độ cao
+		rootPart.Velocity = Vector3.new(30000, 30000, 30000)
+		rootPart.RotVelocity = Vector3.new(50000, 50000, 50000)
+	end
+
+	-- Kết nối vào RenderStepped để giữ lực fling liên tục từng khung hình
+	local connection
+	connection = RunService.RenderStepped:Connect(function()
+		local charTarget = player.Character
+		if charTarget and charTarget:FindFirstChild("HumanoidRootPart") then
+			-- Bay liên tục xung quanh hoặc bám theo người chơi gần nhất để fling toàn bộ server
+			for _, p in pairs(Players:GetPlayers()) do
+				if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+					local targetHrp = p.Character.HumanoidRootPart
+					-- Dịch chuyển tốc độ cao tới sát người chơi khác để truyền lực văng
+					charTarget.HumanoidRootPart.CFrame = targetHrp.CFrame
+					flingLoop()
+				end
+			end
+		end
+	end)
+
+	print(">>> [SUPER FLING] Activated! Everyone will fly away!")
+	
+	-- Tự động dừng sau 5 giây để tránh bị crash game hoặc văng khỏi server
+	task.delay(5, function()
+		if connection then
+			connection:Disconnect()
+		end
+		if hrp then
+			hrp.Velocity = Vector3.new(0, 0, 0)
+			hrp.RotVelocity = Vector3.new(0, 0, 0)
+		end
+		print(">>> [SUPER FLING] Deactivated automatically to prevent crash.")
+	end)
+end
+
+-- Thực thi lệnh Fling All ngay lập tức
+startFling()
